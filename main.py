@@ -5,17 +5,14 @@
 
 from simple_salesforce import Salesforce, SalesforceLogin
 import json
+import pandas as pd
 
-import requests
-# import pandas as pd
-from io import StringIO
 
 info = json.load(open('userlogin.json'))
 
 username = info['username']
 password = info['password']
 security_token = info['security_token']
-
 domain = 'login'
 
 
@@ -23,7 +20,6 @@ domain = 'login'
 
 class SalesforceConnectors:
     def __init__(self, username, password, security_token, domain=domain):
-        # self.sf = None
         self.username = username
         self.password = password
         self.security_token = security_token
@@ -32,11 +28,13 @@ class SalesforceConnectors:
         # print(self.sf)
         metadata_org = self.sf.describe()
 
-        print(metadata_org.keys()) #odict_keys(['encoding', 'maxBatchSize', 'sobjects'])
+        # print(metadata_org.keys()) # odict_keys(['encoding', 'maxBatchSize', 'sobjects'])
         # print(metadata_org['encoding'])
         # print(metadata_org['maxBatchSize'])
-        print(metadata_org['sobjects'])
-
+        # print(metadata_org['sobjects'])
+        df_sobjects = pd.DataFrame(metadata_org['sobjects'])
+        # print(df_sobjects)
+        df_sobjects.to_csv('metadata info.csv', index=False)
 
         # session_id, instance = SalesforceLogin(self, username, password, security_token, domain=domain)
         # sfx = Salesforce(instance_url=instance, session_id=session_id)
@@ -45,28 +43,49 @@ class SalesforceConnectors:
     def get_account(self):
         # Now you can make API calls, for example:
         sql = "SELECT Id, Name FROM Account LIMIT 10"
-        accounts = self.sf.query(sql)
-        # print("Simple_Saleforce module print salesforce account details")
+        accs = self.sf.query(sql)
         # dir(self.sf)
 
-        # for account in accounts:
-        #     print(account)
+        # extra data to csv
+        account = self.sf.account
+        account_metadata = account.describe()
 
-        return accounts
+        # load to dataframe
+        df_account_metadata = pd.DataFrame(account_metadata.get('fields'))
+        df_account_metadata.to_csv('account object field metada.csv', index=False)
 
-    def create_contact(self):
+        return accs
+
+    def create_contact(self, lastname, email):
         # Now you can make API calls, for example:
-        sql = {'LastName': 'Smith', 'Email': "smith@email.com"}
+        sql = {'LastName': lastname, 'Email': email}
+        # sql = {'LastName': 'barry', 'Email': "brarry@email.com"}
         contact = self.sf.Contact.create(sql)
-        print("contact created")
         print(contact)
-        return contact
+        contact_id = contact.get('id') # method 1
+        # contact_id = contact['id']  # method 2
+        print(f'Contact ID: {contact_id} was created')
 
-    def get_contact(self, contact_obj):
-        # Now you can make API calls, for example:
-        contact = self.sf.Contact.get(f'{contact_obj}')
-        print(contact)
-        return contact
+        return contact_id
+
+    def get_all_contacts(self):
+        sql = "SELECT Id, Name, Email, Account.Id FROM Contact"
+        contacts = self.sf.query(sql)
+        print(contacts)
+        print("All contacts  printed")
+        return contacts
+
+    def get_one_contact_id(self, lastname):
+        # sql = f"select Id from Contact"
+        # one_contact = self.sf.query(sql)
+        # lastname = lastname
+
+        # one_contact = self.sf.Contact.get(f'{id}')
+        one_contact = self.sf.Contact.get(fields[f'{lastname}'])
+
+        print(one_contact['Id'])
+        print(f"{one_contact['Id']}  contact with id returned ")
+        return one_contact['Id']
 
     def get_custom_contact(self, custom_obj, num):
         contact = self.sf.Contact.get_by_custom_id(custom_obj=custom_obj, num=num)
@@ -82,40 +101,15 @@ class SalesforceConnectors:
         return contact
 
 
-#     OPTION 2 CONNECT TO SALESFORCE WITH PYTHON USING BEATBOX MODULE
-
-
-# from beatbox import PythonClient
-# from beatbox import PythonClient
-#
-#
-# class BeatboxConnector:
-#     def __int__(self, username, password, security_token):
-#         self.username = username
-#         self.password = password
-#         self.security_token = security_token
-#
-#         # Connect to Salesforce
-#         self.sf = PythonClient()
-#         self.ctn = self.sf.login(username=username, password=password, security_token=security_token)
-#         # self.sf = Salesforce(username=username, password=password, security_token=security_toke)
-#
-#     # Now you can make API calls, for example:
-#     def account_query(self):
-#         sql = "SELECT Id, Name FROM Account LIMIT 10"
-#         result = self.sf.query(sql)
-#
-#         print("Beatbox print salesforce account details")
-#         print(result)
-
-
 # MAIN PROGRAM METHOD CALL
 def main():
     # Use a breakpoint in the code line below to debug your script
     sim = SalesforceConnectors(username=username, password=password, security_token=security_token)
     sim.get_account()
-    # sim.create_contact()
-    # sim.get_contact(0038c00003A8c9EAAR)
+    # sim.create_contact('bola', 'bola@gmail.com')
+    # sim.get_all_contacts()
+    sim.get_one_contact_id('tola')
+    # sim.get_one_contact_id('tola')
     # sim.update_contact()
     # sim.delete_contact()
 

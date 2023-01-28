@@ -7,7 +7,6 @@ from simple_salesforce import Salesforce, SalesforceLogin
 import json
 import pandas as pd
 
-
 info = json.load(open('userlogin.json'))
 
 username = info['username']
@@ -62,7 +61,7 @@ class SalesforceConnectors:
         # sql = {'LastName': 'barry', 'Email': "brarry@email.com"}
         contact = self.sf.Contact.create(sql)
         print(contact)
-        contact_id = contact.get('id') # method 1
+        contact_id = contact.get('id')  # method 1
         # contact_id = contact['id']  # method 2
         print(f'Contact ID: {contact_id} was created')
 
@@ -75,14 +74,8 @@ class SalesforceConnectors:
         print("All contacts  printed")
         return contacts
 
-    def get_one_contact_id(self, lastname):
-        # sql = f"select Id from Contact"
-        # one_contact = self.sf.query(sql)
-        # lastname = lastname
-
-        # one_contact = self.sf.Contact.get(f'{id}')
-        one_contact = self.sf.Contact.get(fields[f'{lastname}'])
-
+    def get_one_contact_id(self, id):
+        one_contact = self.sf.Contact.get(f'{id}')
         print(one_contact['Id'])
         print(f"{one_contact['Id']}  contact with id returned ")
         return one_contact['Id']
@@ -92,12 +85,14 @@ class SalesforceConnectors:
         print(contact)
         return contact
 
-    def update_contact(self):
-        contact = self.sf.Contact.update('003e0000003GuNXAA0', {'LastName': 'Jones', 'FirstName': 'John'})
+    def update_contact(self, id, lastname, firstname):
+        contact = self.sf.Contact.update(f'{id}', {'LastName': f'{lastname}', 'FirstName': f'{firstname}'})
+        # 0038c00002lEzgsAAC
         return contact
 
-    def delete_contact(self):
-        contact = self.sf.Contact.delete('003e0000003GuNXAA0')
+    def delete_contact(self, id):
+        contact = self.sf.Contact.delete(f'{id}')
+        # 0038c00002lEzgsAAC
         return contact
 
 
@@ -106,10 +101,9 @@ def main():
     # Use a breakpoint in the code line below to debug your script
     sim = SalesforceConnectors(username=username, password=password, security_token=security_token)
     sim.get_account()
-    # sim.create_contact('bola', 'bola@gmail.com')
-    # sim.get_all_contacts()
-    sim.get_one_contact_id('tola')
-    # sim.get_one_contact_id('tola')
+    # sim.create_contact('dora', 'dora@gmail.com')
+    sim.get_all_contacts()
+    sim.get_one_contact_id('0038c00002lEzgsAAC')
     # sim.update_contact()
     # sim.delete_contact()
 
